@@ -1,7 +1,7 @@
 import http from 'http'
 import express from 'express'
 import { Server } from 'socket.io'
-import auth0 from 'auth0-socketio'
+import { auth0Middleware } from 'auth0-socketio'
 
 const isDev = process.env.NODE_ENV === 'development'
 const app = express()
@@ -12,7 +12,7 @@ const io = new Server(server, {
     cors: { origin: '*' }
 })
 
-const withAuthentication = auth0.auth0Middleware('asasvirtuais.us.auth0.com');
+const withAuthentication = auth0Middleware('asasvirtuais.us.auth0.com');
 
 io.use(withAuthentication)
 

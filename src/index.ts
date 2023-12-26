@@ -27,7 +27,7 @@ app.use(eoidc.auth({
 app.get('/', (_req, res) => res.send('ok'))
 
 io.on('connection', (socket) => {
-    console.log('connection')
+    console.log('Socket connected')
 })
 
 io.use((socket) => {
