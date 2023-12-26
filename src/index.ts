@@ -28,6 +28,8 @@ const store : {
     [key: string]: Client
 } = {}
 
+app.get('/', (_req, res) => res.send('ok'))
+
 app.get('/waweb', eoidc.requiresAuth(), async (req, res) => {
 
     const id = req.oidc.user?.sub
