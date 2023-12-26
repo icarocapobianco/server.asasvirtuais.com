@@ -8,6 +8,6 @@ RUN npm install --production
 
 COPY ./build ./build
 
-ENV PORT=4000
+ENV PORT=3000
 
 CMD [ "npm","start" ]

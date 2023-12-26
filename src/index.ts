@@ -19,11 +19,6 @@ app.use(eoidc.auth({
     issuerBaseURL: 'https://asasvirtuais.us.auth0.com'
   }))
 
-// req.isAuthenticated is provided from the auth router
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
-})
-
 const store : {
     [key: string]: Client
 } = {}

@@ -1,17 +1,14 @@
-# fly.toml app configuration file generated for asasvirtuais on 2023-12-26T11:31:03-03:00
+# fly.toml app configuration file generated for ws-asasvirtuais-com on 2023-06-29T18:19:09-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "asasvirtuais"
+app = "ws-asasvirtuais-com"
 primary_region = "gru"
-
-[env]
-  PORT = "4000"
 
 [[services]]
   protocol = "tcp"
-  internal_port = 4000
+  internal_port = 3000
 
   [[services.ports]]
     port = 80

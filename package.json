@@ -1,4 +1,5 @@
 {
+  "name": "@asasvirtuais/server",
   "private": true,
   "type": "module",
   "scripts": {
