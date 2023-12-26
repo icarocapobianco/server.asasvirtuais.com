@@ -3,12 +3,12 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "ws-asasvirtuais-com"
+app = "asasvirtuais"
 primary_region = "gru"
 
 [[services]]
   protocol = "tcp"
-  internal_port = 3000
+  internal_port = 4000
 
   [[services.ports]]
     port = 80
