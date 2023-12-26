@@ -1,6 +1,5 @@
 import 'dotenv/config'
-import cors from 'cors'
-import app from './app'
+import app, { io } from './app'
 import eoidc from 'express-openid-connect'
 import { Client } from 'whatsapp-web.js'
 
@@ -10,45 +9,32 @@ declare module 'whatsapp-web.js' {
     }
 }
 
+const store : {
+    [key: string]: Client
+} = {}
+
+
 app.use(eoidc.auth({
     authRequired: false,
     auth0Logout: false,
     secret: process.env.AUTH0_SECRET,
     baseURL: 'http://localhost:4000',
     clientID: process.env.AUTH0_CLIENT_ID,
-    issuerBaseURL: 'https://asasvirtuais.us.auth0.com'
+    issuerBaseURL: 'https://asasvirtuais.us.auth0.com',
+    attemptSilentLogin: true
 }))
-
-app.use(cors())
-
-const store : {
-    [key: string]: Client
-} = {}
 
 app.get('/', (_req, res) => res.send('ok'))
 
-app.get('/waweb', eoidc.requiresAuth(), async (req, res) => {
+io.on('connection', (socket) => {
+    console.log('connection')
+})
 
-    const id = req.oidc.user?.sub
-    if ( ! id )
-        throw new Error('Failed to get user id')
-
-    const client = store[id] ?? new Client({})
-
-    if ( ! store[id] ) {
-        store[id] = client
-        client.initialize()
-        res.json(
-            await new Promise(
-                res => client.on('qr', res)
-            )
-        )
-    } else {
-        if ( client.initializing )
-            res.json(false)
-        else
-            res.json(true)
-    }
+io.use((socket) => {
+    socket.on('waweb.qrcode.get', () => {
+        console.log('waweb')
+        socket.emit('waweb.qrcode.res', 'test')
+    })
 })
 
 app.listen(4000, () => {
