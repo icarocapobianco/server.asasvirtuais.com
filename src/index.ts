@@ -1,5 +1,5 @@
 import 'dotenv/config'
-
+import cors from 'cors'
 import app from './app'
 import eoidc from 'express-openid-connect'
 import { Client } from 'whatsapp-web.js'
@@ -17,7 +17,9 @@ app.use(eoidc.auth({
     baseURL: 'http://localhost:4000',
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: 'https://asasvirtuais.us.auth0.com'
-  }))
+}))
+
+app.use(cors())
 
 const store : {
     [key: string]: Client
