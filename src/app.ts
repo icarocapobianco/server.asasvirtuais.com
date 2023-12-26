@@ -12,7 +12,7 @@ const io = new Server(server, {
     cors: { origin: '*' }
 })
 
-const withAuthentication = auth0Middleware('asasvirtuais.us.auth0.com');
+const withAuthentication = auth0Middleware('asasvirtuais.us.auth0.com')
 
 io.use(withAuthentication)
 

@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import app, { io } from './app'
+import app, { io, server } from './app'
 import eoidc from 'express-openid-connect'
 import { Client } from 'whatsapp-web.js'
 
@@ -18,25 +18,24 @@ app.use(eoidc.auth({
     authRequired: false,
     auth0Logout: false,
     secret: process.env.AUTH0_SECRET,
-    baseURL: 'http://localhost:4000',
+    baseURL: process.env.AUTH0_BASE_URL,
     clientID: process.env.AUTH0_CLIENT_ID,
-    issuerBaseURL: 'https://asasvirtuais.us.auth0.com',
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
     attemptSilentLogin: true
 }))
-
-app.get('/', (_req, res) => res.send('ok'))
 
 io.on('connection', (socket) => {
     console.log('Socket connected')
 })
 
-io.use((socket) => {
+io.use((socket, next) => {
     socket.on('waweb.qrcode.get', () => {
-        console.log('waweb')
         socket.emit('waweb.qrcode.res', 'test')
     })
+    next()
 })
 
-app.listen(4000, () => {
-    console.log(`listening on port 4000`)
+const port = process.env.PORT
+server.listen(port, () => {
+    console.log(`listening on port ${port}`)
 })
