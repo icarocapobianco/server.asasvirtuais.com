@@ -1,7 +1,7 @@
 import { Express } from 'express'
 import eoidc from 'express-openid-connect'
 
-export default function expressAuth( app: Express ) {
+export default function expressIndex( app: Express ) {
 
     app.use(eoidc.auth({
         authRequired: false,

@@ -2,9 +2,8 @@ import 'dotenv/config'
 import http from 'http'
 import express from 'express'
 import { Server } from 'socket.io'
-import waweb from './socket/waweb'
-import expressAuth from './express/auth'
-import socketAuth from './socket/auth'
+import socketio from './socket'
+import expressIndex from './express/index'
 
 const app = express()
 const server = http.createServer(app)
@@ -13,9 +12,9 @@ const io = new Server(server, {
     cors: { origin: '*' }
 })
 
-expressAuth(app)
-socketAuth(io)
-waweb(io)
+app.use(expressIndex)
+
+socketio(io)
 
 const port = process.env.PORT
 
