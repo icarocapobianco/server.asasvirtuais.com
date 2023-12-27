@@ -42,10 +42,7 @@ export default function( io : Server ) {
         client.on('message', message => {
             console.log(`${user} received message: ${message.body}`)
             console.log(message)
-            if ( message.fromMe ) {
-                console.log('Message from user')
-                message.reply('This message is just an example, and doesn\'t use AI')
-            }
+            message.reply('This message is just an example, and doesn\'t use AI')
         })
 
     })
