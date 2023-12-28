@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
 import { auth0Middleware } from 'auth0-socketio'
 import { Client } from 'whatsapp-web.js'
+import { getResponse } from '@/openai'
 
 declare module 'whatsapp-web.js' {
     interface Client {
@@ -39,10 +40,17 @@ export default function( io : Server ) {
             delete store[user]
             socket.emit('disconnected')
         })
-        client.on('message', message => {
-            console.log(`${user} received message: ${message.body}`)
-            console.log(message)
-            message.reply('This message is just an example, and doesn\'t use AI')
+        client.on('message', async message => {
+            console.log(`${user} received a message`)
+            if ( message.type !== 'chat' )
+                return
+            if ( message.fromMe )
+                return
+            console.log(`${user} received a text message`)
+            const response = (await getResponse(user, message.body)).content
+            if ( ! response )
+                return
+            message.reply(response)
         })
 
     })
