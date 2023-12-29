@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import { Client } from 'whatsapp-web.js'
+import { Client, LocalAuth } from 'whatsapp-web.js'
 import { getResponse } from '@/openai'
 
 declare module 'whatsapp-web.js' {
@@ -28,9 +28,7 @@ export default function ( socket: Socket ) {
               type: "remote",
               remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2325.3.html",
             },
-            // authStrategy: new LocalAuth({
-            //   dataPath: authStorageDir,
-            // }),
+            authStrategy: new LocalAuth({ clientId: user }),
             puppeteer: {
               headless: true,
               args: [
