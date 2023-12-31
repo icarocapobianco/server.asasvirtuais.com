@@ -1,6 +1,9 @@
 import { Socket } from 'socket.io'
-import { Client, LocalAuth } from 'whatsapp-web.js'
+import waweb from 'whatsapp-web.js'
+import type { Client as WaWebClient } from 'whatsapp-web.js'
 import { getResponse } from '@/openai'
+
+const { Client, LocalAuth } = waweb
 
 declare module 'whatsapp-web.js' {
     interface Client {
@@ -9,7 +12,7 @@ declare module 'whatsapp-web.js' {
 }
 
 const store : {
-    [key: string]: Client
+    [key: string]: WaWebClient
 } = {}
 
 export default function ( socket: Socket ) {
@@ -23,12 +26,7 @@ export default function ( socket: Socket ) {
         socket.emit('ready')
     } else {
         client = new Client({
-            webVersion: "2.2325.3",
-            webVersionCache: {
-              type: "remote",
-              remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2325.3.html",
-            },
-            authStrategy: new LocalAuth({ clientId: user }),
+            authStrategy: new LocalAuth({ clientId: user.split('|')[1] }),
             puppeteer: {
               headless: true,
               args: [
@@ -48,13 +46,13 @@ export default function ( socket: Socket ) {
             store[user] = client
         } )
     }
-    client.on('qr', qr => socket.emit('qr', qr))
+    client.on('qr', (qr: string) => socket.emit('qr', qr))
     client.on('ready', () => socket.emit('ready'))
     client.on('disconnected', () => {
         delete store[user]
         socket.emit('disconnected')
     })
-    client.on('message', async message => {
+    client.on('message', async (message) => {
         console.log(`${user} received a message`)
         if ( message.type !== 'chat' )
             return
