@@ -47,22 +47,24 @@ export default function ( socket: Socket ) {
         } )
     }
     client.on('qr', (qr: string) => socket.emit('qr', qr))
-    client.on('ready', () => socket.emit('ready'))
+    client.on('ready', () => {
+        socket.emit('ready')
+        client.on('message', async (message) => {
+            console.log(`${user} received a message`)
+            if ( message.type !== 'chat' )
+                return
+            if ( message.fromMe )
+                return
+            console.log(`${user} received a text message`)
+            const response = (await getResponse(user, message.body)).content
+            if ( ! response )
+                return
+            message.reply(response)
+        })
+    })
     client.on('disconnected', () => {
         delete store[user]
         socket.emit('disconnected')
-    })
-    client.on('message', async (message) => {
-        console.log(`${user} received a message`)
-        if ( message.type !== 'chat' )
-            return
-        if ( message.fromMe )
-            return
-        console.log(`${user} received a text message`)
-        const response = (await getResponse(user, message.body)).content
-        if ( ! response )
-            return
-        message.reply(response)
     })
 
 }
