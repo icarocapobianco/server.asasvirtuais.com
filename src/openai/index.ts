@@ -1,12 +1,17 @@
 import OpenAI from 'openai'
+import auth0 from 'asasvirtuais/src/auth0'
 
 const openaiKey = process.env.OPENAI_KEY as string
 const openai = new OpenAI({ apiKey: openaiKey })
 
 const getBusiness = async (user: string) => {
+    const res = await auth0.management.users.get({ id: user })
+    const metdata = res.data.app_metadata
+    if ( ! metdata )
+        throw new Error('User has no app_metadata')
     return {
-        name: 'Asas Virtuais',
-        context: 'Asas Virtuais is a private initiative with the purpose of providing accessible web technology for small and medium companies'
+        name: metdata?.waweb?.business?.name,
+        description: metdata?.waweb?.business?.description
     }
 }
 
@@ -27,7 +32,7 @@ export const getResponse = async ( user: string, message: string) => {
                     business.name
                 }${
                     '\n'
-                }Business context: ${business.context}`
+                }Business context: ${business.description}`
             },
             {
                 role: 'user',
