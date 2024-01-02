@@ -45,10 +45,17 @@ export default function ( socket: Socket ) {
             console.log(`${user} ready`)
             store[user] = client
         } )
+        console.log(`${user} initializing`)
     }
     client.on('qr', (qr: string) => socket.emit('qr', qr))
-    client.on('ready', () => {
-        socket.emit('ready')
+    client.on('ready', () => socket.emit('ready'))
+    client.on('disconnected', () => {
+        delete store[user]
+        socket.emit('disconnected')
+    })
+    socket.on('replyAll', () => {
+        console.log(`${user} set replies to all`)
+        client.removeAllListeners('message')
         client.on('message', async (message) => {
             console.log(`${user} received a message`)
             if ( message.type !== 'chat' )
@@ -62,9 +69,8 @@ export default function ( socket: Socket ) {
             message.reply(response)
         })
     })
-    client.on('disconnected', () => {
-        delete store[user]
-        socket.emit('disconnected')
+    socket.on('replyNone', () => {
+        console.log(`${user} set replies to none`)
+        client.removeAllListeners('message')
     })
-
 }
