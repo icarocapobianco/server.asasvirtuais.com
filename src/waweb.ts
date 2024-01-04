@@ -5,15 +5,20 @@ import { getResponse } from '@/openai'
 
 const { Client, LocalAuth } = waweb
 
-declare module 'whatsapp-web.js' {
-    interface Client {
-        initializing?: boolean
-    }
+const store : {
+    [user_id: string]: WaWebClient
+} = {}
+
+type Settings = {
+    replies: 'all' | 'none'
 }
 
-const store : {
-    [key: string]: WaWebClient
-} = {}
+export function initialize( user: string, client: WaWebClient ) {
+    client.initialize().then( () => {
+        console.log(`${user} ready`)
+        store[user] = client
+    })
+}
 
 export default function ( socket: Socket ) {
     const user = socket.auth?.user?.sub
@@ -23,7 +28,8 @@ export default function ( socket: Socket ) {
     let client = store[user]
     if ( client ) {
         console.log(`${user} already ready`)
-        socket.emit('ready')
+        socket.emit('waweb.ready')
+        initialize(user, client)
     } else {
         client = new Client({
             authStrategy: new LocalAuth({ clientId: user.split('|')[1] }),
@@ -41,26 +47,32 @@ export default function ( socket: Socket ) {
               ],
             },
         })
-        client.initialize().then( () => {
-            console.log(`${user} ready`)
-            store[user] = client
-        } )
+        initialize(user, client)
         console.log(`${user} initializing`)
     }
-    client.on('qr', (qr: string) => socket.emit('qr', qr))
-    client.on('ready', () => socket.emit('ready'))
+    client.on('qr', (qr: string) => socket.emit('waweb.qrcode', qr))
+    client.on('ready', () => socket.emit('waweb.ready'))
     client.on('disconnected', () => {
         delete store[user]
-        socket.emit('disconnected')
+        socket.emit('waweb.disconnected')
     })
-    socket.on('replyAll', () => {
-        console.log(`${user} set replies to all`)
+    socket.on('waweb.settings', (settings: Settings) => {
+
+        if ( settings.replies === 'all' )
+            console.log(`${user} set replies to all`)
+
         client.removeAllListeners('message')
+
+        if ( settings.replies === 'none' ) {
+            console.log(`${user} set replies to none`)
+            return
+        }
+
         client.on('message', async (message) => {
             console.log(`${user} received a message`)
-            if ( message.type !== 'chat' )
-                return
             if ( message.fromMe )
+                return
+            if ( message.type !== 'chat' )
                 return
             console.log(`${user} received a text message`)
             const response = (await getResponse(user, message.body)).content
@@ -68,9 +80,5 @@ export default function ( socket: Socket ) {
                 return
             message.reply(response)
         })
-    })
-    socket.on('replyNone', () => {
-        console.log(`${user} set replies to none`)
-        client.removeAllListeners('message')
     })
 }
