@@ -9,10 +9,7 @@ const getBusiness = async (user: string) => {
     const metdata = res.data.app_metadata
     if ( ! metdata )
         throw new Error('User has no app_metadata')
-    return {
-        name: metdata?.waweb?.business?.name,
-        description: metdata?.waweb?.business?.description
-    }
+    return metdata?.['waweb_business']
 }
 
 export const getResponse = async ( user: string, message: string) => {
