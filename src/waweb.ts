@@ -49,14 +49,14 @@ export default function ( socket: Socket ) {
             puppeteer: {
               headless: true,
               args: [
-                "--no-sandbox",
-                "--no-first-run",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-accelerated-2d-canvas",
-                "--disable-gpu",
-                "--single-process",
-                "--no-zygote",
+                '--no-sandbox',
+                '--no-first-run',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
+                '--single-process',
+                '--no-zygote',
               ],
             },
         })
