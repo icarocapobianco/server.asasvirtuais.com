@@ -9,22 +9,26 @@ const store : {
     [user_id: string]: WaWebClient
 } = {}
 
-export function initialize( user: string, client: WaWebClient ) {
+function setEvents( user: string, client: WaWebClient ) {
+    client.removeAllListeners('message')
+    client.on('message', async (message) => {
+        console.log(`${user} received a message`)
+        if ( message.fromMe )
+            return
+        if ( message.type !== 'chat' )
+            return
+        console.log(`${user} received a text message`)
+        const response = (await getResponse(user, message.body)).content
+        if ( ! response )
+            return
+        message.reply(response)
+    })
+}
+
+function initialize( user: string, client: WaWebClient ) {
     client.initialize().then( () => {
+        setEvents(user, client)
         console.log(`${user} ready`)
-        client.removeAllListeners('message')
-        client.on('message', async (message) => {
-            console.log(`${user} received a message`)
-            if ( message.fromMe )
-                return
-            if ( message.type !== 'chat' )
-                return
-            console.log(`${user} received a text message`)
-            const response = (await getResponse(user, message.body)).content
-            if ( ! response )
-                return
-            message.reply(response)
-        })
         store[user] = client
     })
 }
@@ -64,5 +68,11 @@ export default function ( socket: Socket ) {
     client.on('disconnected', () => {
         delete store[user]
         socket.emit('waweb.disconnected')
+    })
+    socket.on('waweb.on', () => {
+        setEvents(user, client)
+    })
+    socket.on('waweb.off', () => {
+        client.removeAllListeners('message')
     })
 }
