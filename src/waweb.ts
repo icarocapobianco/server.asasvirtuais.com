@@ -9,13 +9,22 @@ const store : {
     [user_id: string]: WaWebClient
 } = {}
 
-type Settings = {
-    replies: 'all' | 'none'
-}
-
 export function initialize( user: string, client: WaWebClient ) {
     client.initialize().then( () => {
         console.log(`${user} ready`)
+        client.removeAllListeners('message')
+        client.on('message', async (message) => {
+            console.log(`${user} received a message`)
+            if ( message.fromMe )
+                return
+            if ( message.type !== 'chat' )
+                return
+            console.log(`${user} received a text message`)
+            const response = (await getResponse(user, message.body)).content
+            if ( ! response )
+                return
+            message.reply(response)
+        })
         store[user] = client
     })
 }
@@ -55,30 +64,5 @@ export default function ( socket: Socket ) {
     client.on('disconnected', () => {
         delete store[user]
         socket.emit('waweb.disconnected')
-    })
-    socket.on('waweb.settings', (settings: Settings) => {
-
-        if ( settings.replies === 'all' )
-            console.log(`${user} set replies to all`)
-
-        client.removeAllListeners('message')
-
-        if ( settings.replies === 'none' ) {
-            console.log(`${user} set replies to none`)
-            return
-        }
-
-        client.on('message', async (message) => {
-            console.log(`${user} received a message`)
-            if ( message.fromMe )
-                return
-            if ( message.type !== 'chat' )
-                return
-            console.log(`${user} received a text message`)
-            const response = (await getResponse(user, message.body)).content
-            if ( ! response )
-                return
-            message.reply(response)
-        })
     })
 }
