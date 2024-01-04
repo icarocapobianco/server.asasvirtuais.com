@@ -71,8 +71,10 @@ export default function ( socket: Socket ) {
     })
     socket.on('waweb.on', () => {
         setEvents(user, client)
+        console.log(`${user} on`)
     })
     socket.on('waweb.off', () => {
         client.removeAllListeners('message')
+        console.log(`${user} off`)
     })
 }
