@@ -5,11 +5,17 @@ import { getResponse } from '@/openai'
 
 const { Client, LocalAuth } = waweb
 
+declare module 'whatsapp-web.js' {
+    interface Client {
+        initialized: boolean
+    }
+}
+
 const store : {
     [user_id: string]: WaWebClient
 } = {}
 
-function setEvents( user: string, client: WaWebClient ) {
+function setMessageEvent( user: string, client: WaWebClient ) {
     client.removeAllListeners('message')
     client.on('message', async (message) => {
         console.log(`${user} received a message`)
@@ -27,54 +33,81 @@ function setEvents( user: string, client: WaWebClient ) {
 
 function initialize( user: string, client: WaWebClient ) {
     client.initialize().then( () => {
-        setEvents(user, client)
+        client.initialized = true
         console.log(`${user} ready`)
         store[user] = client
     })
 }
 
-export default function ( socket: Socket ) {
-    const user = socket.auth?.user?.sub
+function userOrFalse( socket: Socket ) {
+    const user = socket.auth?.user.sub
+    if ( ! user )
+        return false
     console.log(`${user} connected`)
+    return user
+}
+
+function existingOrNewClient( user: string ) {
+    if ( store[user] ) {
+        console.log(`${user} already stored`)
+        return store[user]
+    } else {
+        console.log(`${user} new client`)
+    }
+
+    return new Client({
+        authStrategy: new LocalAuth({ clientId: user.split('|')[1] }),
+        puppeteer: {
+            headless: true,
+            args: [
+            '--no-sandbox',
+            '--no-first-run',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--single-process',
+            '--no-zygote',
+            ],
+        },
+    })
+}
+
+export default function ( socket: Socket ) {
+    console.log('New connection')
+
+    const user = userOrFalse(socket)
+
     if ( ! user )
         return socket.disconnect()
-    let client = store[user]
-    if ( client ) {
-        console.log(`${user} already ready`)
-        socket.emit('waweb.ready')
-        initialize(user, client)
-    } else {
-        client = new Client({
-            authStrategy: new LocalAuth({ clientId: user.split('|')[1] }),
-            puppeteer: {
-              headless: true,
-              args: [
-                '--no-sandbox',
-                '--no-first-run',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--disable-gpu',
-                '--single-process',
-                '--no-zygote',
-              ],
-            },
-        })
-        initialize(user, client)
-        console.log(`${user} initializing`)
-    }
+    
+    const client = existingOrNewClient( user )
+
     client.on('qr', (qr: string) => socket.emit('waweb.qrcode', qr))
     client.on('ready', () => socket.emit('waweb.ready'))
     client.on('disconnected', () => {
+        console.log(`${user} disconnected`)
         delete store[user]
         socket.emit('waweb.disconnected')
     })
+
+    client.on('authenticated', () => {
+        console.log(`${user} authenticated`)
+    })
+
     socket.on('waweb.on', () => {
-        setEvents(user, client)
+        setMessageEvent(user, client)
         console.log(`${user} on`)
     })
     socket.on('waweb.off', () => {
         client.removeAllListeners('message')
         console.log(`${user} off`)
     })
+    if ( ! client.initialized ) {
+        console.log (`${user} initializing`)
+        initialize(user, client)
+    } else {
+        socket.emit('waweb.ready')
+        console.log(`${user} already initialized`)
+    }
 }
