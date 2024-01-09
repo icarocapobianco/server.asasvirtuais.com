@@ -34,7 +34,7 @@ function setMessageEvent( user: string, client: WaWebClient ) {
 function initialize( user: string, client: WaWebClient ) {
     client.initialize().then( () => {
         client.initialized = true
-        console.log(`${user} ready`)
+        console.log(`${user} initialized`)
         store[user] = client
     })
 }
@@ -56,7 +56,6 @@ function existingOrNewClient( user: string ) {
     }
 
     return new Client({
-        authStrategy: new LocalAuth({ clientId: user.split('|')[1] }),
         puppeteer: {
             headless: true,
             args: [
@@ -89,10 +88,6 @@ export default function ( socket: Socket ) {
         console.log(`${user} disconnected`)
         delete store[user]
         socket.emit('waweb.disconnected')
-    })
-
-    client.on('authenticated', () => {
-        console.log(`${user} authenticated`)
     })
 
     socket.on('waweb.on', () => {
